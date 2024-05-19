@@ -3,11 +3,21 @@ package mt.netflix.dataplatform;
 import mt.netflix.dataplatform.options.FormatterPipelineOptions;
 import mt.netflix.dataplatform.transforms.CsvToRecord;
 import mt.netflix.dataplatform.transforms.PrepareCsvData;
+import mt.netflix.dataplatform.transforms.EnrichGenericRecordsFn;
 import mt.netflix.dataplatform.transforms.ParseCsvData;
 import mt.netflix.dataplatform.utils.CsvRecord;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.extensions.avro.io.AvroIO;
+
+import org.apache.beam.sdk.io.kafka.ConfluentSchemaRegistryDeserializerProvider;
+import org.apache.beam.sdk.io.kafka.KafkaIO;
+import org.apache.beam.sdk.io.kafka.KafkaRecord;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.kafka.common.serialization.LongDeserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+
+
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
@@ -46,6 +56,23 @@ public class FormatterPipeline {
 
         TupleTag<CsvRecord> validRecords = new TupleTag<CsvRecord>() {};
         TupleTag<String> notValidRecords = new TupleTag<String>() {};
+
+
+        PCollection<KafkaRecord<String, GenericRecord>> kafka_events = p
+                .apply("KafkaConsumer",
+                        KafkaIO.read()
+                                .withBootstrapServers("localhost:9092")
+                                .withTopic("netflix_events")
+                                .withKeyDeserializer(StringDeserializer.class)
+                                .withValueDeserializer(
+                                        ConfluentSchemaRegistryDeserializerProvider.of
+                                                ("http://localhost:8081", "netflix_events")
+                                )
+                );
+
+        PCollection<GenericRecord> avro_records = kafka_events
+                .apply("Add extra fields",
+                        ParDo.of(new EnrichGenericRecordsFn()));
 
         LOGGER.info("******************** Reading of CSV file started *********************");
         LOGGER.info("******************** Parsing of CSV data started *********************");
