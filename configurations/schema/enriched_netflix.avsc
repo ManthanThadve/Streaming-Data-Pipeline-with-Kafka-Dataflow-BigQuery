@@ -1,0 +1,104 @@
+{
+  "type": "record",
+  "name": "Movie",
+  "fields": [
+    {
+      "name": "title",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "cast",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "country",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "date_added",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "release_year",
+      "type": [
+        "null",
+        "int"
+      ],
+    },
+    {
+      "name": "rating",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "duration",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "listed_in",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "description",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "number_of_cast",
+      "type": [
+        "null",
+        "int"
+      ]
+    },
+    {
+      "name": "timestamp",
+      "type": [
+        "null",
+        "int"
+      ]
+    },
+    {
+      "name": "source_topic",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "partition",
+      "type": [
+        "null",
+        "int"
+      ]
+    },
+    {
+      "name": "offset",
+      "type": [
+        "null",
+        "int"
+      ]
+    }
+  ]
+}
