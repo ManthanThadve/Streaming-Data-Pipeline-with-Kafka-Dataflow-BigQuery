@@ -15,6 +15,7 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
@@ -65,7 +66,7 @@ public class FormatterPipeline {
         Map<String, Object> kafkaProducerConfig = new HashMap<>();
         kafkaProducerConfig.put("bootstrap.servers", "localhost:9092");
         kafkaProducerConfig.put("key.serializer", StringSerializer.class.getName());
-        kafkaProducerConfig.put("value.serializer", KafkaAvroSerializer.class.getName());
+        kafkaProducerConfig.put("value.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
         kafkaProducerConfig.put("schema.registry.url", "http://localhost:8081");
 
         System.out.println("ProducerConfig created");
@@ -108,7 +109,7 @@ public class FormatterPipeline {
                         .withBootstrapServers("localhost:9092")
                         .withTopic(options.getOutputTopic().toString())
                         .withKeySerializer(StringSerializer.class)
-                        .withValueSerializer((Class) KafkaAvroSerializer.class)
+                        .withValueSerializer((Class<? extends Serializer<GenericRecord>>) KafkaAvroSerializer.class)
                         .withProducerConfigUpdates(kafkaProducerConfig)
         );
 
