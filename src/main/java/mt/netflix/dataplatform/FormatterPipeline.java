@@ -1,105 +1,122 @@
 package mt.netflix.dataplatform;
 
-import mt.netflix.dataplatform.options.FormatterPipelineOptions;
-import mt.netflix.dataplatform.transforms.CsvToRecord;
-import mt.netflix.dataplatform.transforms.PrepareCsvData;
-import mt.netflix.dataplatform.transforms.EnrichGenericRecordsFn;
-import mt.netflix.dataplatform.transforms.ParseCsvData;
-import mt.netflix.dataplatform.utils.CsvRecord;
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.extensions.avro.io.AvroIO;
 
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import mt.netflix.dataplatform.options.FormatterPipelineOptions;
+import mt.netflix.dataplatform.transforms.EnrichGenericRecordsFn;
+import mt.netflix.dataplatform.utils.AvroSchemaGenerator;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.kafka.ConfluentSchemaRegistryDeserializerProvider;
 import org.apache.beam.sdk.io.kafka.KafkaIO;
 import org.apache.beam.sdk.io.kafka.KafkaRecord;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.kafka.common.serialization.LongDeserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
-
-
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionTuple;
-import org.apache.beam.sdk.values.TupleTag;
-import org.apache.beam.sdk.values.TupleTagList;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FormatterPipeline {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(FormatterPipeline.class);
 
-//    private static final Logger logger
-//            = LoggerFactory.getLogger(Example.class);
+    public static void main(String[] args) throws IOException {
 
-    public static void main(String[] args) {
+        System.out.println("IN main Fucntion");
 
         FormatterPipelineOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as
                 (FormatterPipelineOptions.class);
 
-        String startMessage = String.format("Started Reading data from '%s' and write to '%s' at time %s", options.getInputFolderPath(), options.getOutputFolderPath(), new Timestamp(System.currentTimeMillis()));
+        System.out.println("Pipeline Options are set");
+
+        String startMessage = String.format("Started Reading data from '%s' and write to '%s' at time %s", options.getInputTopic(), options.getOutputTopic(), new Timestamp(System.currentTimeMillis()));
 
         LOGGER.info(startMessage);
         run(options);
 
     }
 
-    public static void run(FormatterPipelineOptions options){
+    public static void run(FormatterPipelineOptions options) throws IOException {
 
-        String headers = "title,country,date_added,release_year,rating,duration,category,description";
+        System.out.println("In Run function");
 
         Pipeline p = Pipeline.create(options);
 
-        TupleTag<CsvRecord> validRecords = new TupleTag<CsvRecord>() {};
-        TupleTag<String> notValidRecords = new TupleTag<String>() {};
+        System.out.println("Pipeline created");
 
+        Map<String, Object> kafkaConsumerConfig = new HashMap<>();
+        kafkaConsumerConfig.put("bootstrap.servers", "localhost:9092");
+//        kafkaConsumerConfig.put("key.deserializer", StringDeserializer.class.getName());
+//        kafkaConsumerConfig.put("value.deserializer", KafkaAvroDeserializer.class.getName());
+        kafkaConsumerConfig.put("schema.registry.url", "http://localhost:8081");
+        kafkaConsumerConfig.put("specific.avro.reader", "true");
+        kafkaConsumerConfig.put("group.id", "beam-avro-consumer-group");
+        System.out.println("consumerConfig created");
+        // Define Kafka producer configuration
+        Map<String, Object> kafkaProducerConfig = new HashMap<>();
+        kafkaProducerConfig.put("bootstrap.servers", "localhost:9092");
+        kafkaProducerConfig.put("key.serializer", StringSerializer.class.getName());
+        kafkaProducerConfig.put("value.serializer", KafkaAvroSerializer.class.getName());
+        kafkaProducerConfig.put("schema.registry.url", "http://localhost:8081");
 
-        PCollection<KafkaRecord<String, GenericRecord>> kafka_events = p
-                .apply("KafkaConsumer",
-                        KafkaIO.read()
-                                .withBootstrapServers("localhost:9092")
-                                .withTopic("netflix_events")
-                                .withKeyDeserializer(StringDeserializer.class)
-                                .withValueDeserializer(
-                                        ConfluentSchemaRegistryDeserializerProvider.of
-                                                ("http://localhost:8081", "netflix_events")
-                                )
-                );
+        System.out.println("ProducerConfig created");
 
-        PCollection<GenericRecord> avro_records = kafka_events
-                .apply("Add extra fields",
-                        ParDo.of(new EnrichGenericRecordsFn()));
+        Schema netflix_schema = AvroSchemaGenerator
+                .generateAvroSchema(options.getRawSchemaPath().toString());
+
+        String enrichedSchemaPath = options.getEnrichSchemaPath().toString();
+
 
         LOGGER.info("******************** Reading of CSV file started *********************");
         LOGGER.info("******************** Parsing of CSV data started *********************");
-        PCollection<String[]> csv_data = p.apply("Read CSV Data", TextIO.read().from("M:\\Training\\Beam\\Datasets\\Netflix\\netflix-shows-500.csv"))
-//        PCollection<String> raw_data = p.apply("Read CSV Data", TextIO.read().from(options.getInputFolderPath() + options.getInputFileName()))
-                .apply(ParDo.of(new ParseCsvData()));
 
+        System.out.println("logger");
 
-        LOGGER.info("******************** Preparing of CSV data into POJO Started *********************");
-        PCollection<String> tranform_csv_data = csv_data.apply(ParDo.of(new PrepareCsvData()));
+        PCollection<KafkaRecord<String, GenericRecord>> kafka_events;
+        kafka_events = p
+                .apply("KafkaConsumer",
+                        KafkaIO.<String, GenericRecord>read()
+                                .withBootstrapServers("localhost:9092")
+                                .withTopic(options.getInputTopic().toString())
+                                .withKeyDeserializer(StringDeserializer.class)
+                                .withValueDeserializer(
+                                        ConfluentSchemaRegistryDeserializerProvider
+                                                .of("http://localhost:8081", options.getInputTopic().toString()+"-value")
+                                )
+                                .withConsumerConfigUpdates(kafkaConsumerConfig)
+                );
 
-        PCollectionTuple csvRecords = tranform_csv_data.apply(ParDo.of(new CsvToRecord(headers,validRecords,notValidRecords))
-                .withOutputTags(validRecords, TupleTagList.of(notValidRecords)));
+        System.out.println("kafka read");
 
-        LOGGER.info("******************** Writing of Netflix records into avro file started *********************");
+        PCollection<KV<String, GenericRecord>> avro_records = kafka_events
+                .apply("Add extra fields",
+                        ParDo.of(new EnrichGenericRecordsFn(enrichedSchemaPath)));
 
-        csvRecords.get(validRecords).apply("write to avro file", AvroIO.write(CsvRecord.class)
-                .to(options.getOutputFolderPath())
-                .withShardNameTemplate(options.getOutputFileName()+ "-SSSSS-of-NNNNN.avsc").withNumShards(1));
+        System.out.println("tranformation");
 
-        csvRecords.get(notValidRecords).apply(TextIO.write().to(options.getOutputFolderPath())
-                .withShardNameTemplate("error-records"+ ".csv").withNumShards(1));
+        avro_records.apply("Write to Kafka",
+                KafkaIO.<String, GenericRecord>write()
+                        .withBootstrapServers("localhost:9092")
+                        .withTopic(options.getOutputTopic().toString())
+                        .withKeySerializer(StringSerializer.class)
+                        .withValueSerializer((Class) KafkaAvroSerializer.class)
+                        .withProducerConfigUpdates(kafkaProducerConfig)
+        );
 
-
-//        tranform_csv_data.apply(TextIO.write().to(options.getOutputFolderPath()).withShardNameTemplate(options.getOutputFileName()+ "-SSSSS-of-NNNNN.csv"));
+        System.out.println("kafka write");
 
         p.run(options);
+
+        System.out.println("Pipeline RUN");
 //        System.exit(0);
 
     }

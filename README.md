@@ -52,10 +52,12 @@ Before running, one should export the `GOOGLE_APPLICATION_CREDENTIALS` env varia
 mvn compile exec:java -Dexec.mainClass=mt.netflix.dataplatform.FormatterPipeline \
 -Dexec.args=" \
 --runner=DirectRunner \
---inputFolderPath=M:\\Training\\Beam\\Datasets\\Netflix \
---inputFileName=europe-netflix_shows.csv \
---outputFolderPath=M:\\Training\\Beam\\Datasets\\Netflix\\output \
---outputFileName=netflix-output \
+--rawSchemaPath=M:\\Training\\Beam\\netflix-etl-formatter\\configurations\\schema\\raw_netflix.avsc \
+--inputTopic=netflix_events \
+--enrichSchemaPath=M:\\Training\\Beam\\netflix-etl-formatter\\configurations\\schema\\enriched_netflix.avsc \
+--outputTopic=netflix_enriched \
+
+
 
 ```
 

@@ -8,23 +8,23 @@ import org.apache.beam.sdk.options.Validation;
 public interface FormatterPipelineOptions extends PipelineOptions{
 
     @Validation.Required
-    ValueProvider<String> getInputFolderPath();
+    ValueProvider<String> getInputTopic();
 
-    void setInputFolderPath(ValueProvider<String> inputFolderPath);
-
-    @Validation.Required
-    ValueProvider<String> getInputFileName();
-
-    void setInputFileName(ValueProvider<String> inputFileName);
+    void setInputTopic(ValueProvider<String> inputTopic);
 
     @Validation.Required
-    ValueProvider<String> getOutputFolderPath();
+    ValueProvider<String> getRawSchemaPath();
 
-    void setOutputFolderPath(ValueProvider<String> outputFolderPath);
+    void setRawSchemaPath(ValueProvider<String> rawSchemaPath);
 
     @Validation.Required
-    ValueProvider<String> getOutputFileName();
+    ValueProvider<String> getOutputTopic();
 
-    void setOutputFileName(ValueProvider<String> outputFileName);
+    void setOutputTopic(ValueProvider<String> outputTopic);
+
+    @Validation.Required
+    ValueProvider<String> getEnrichSchemaPath();
+
+    void setEnrichSchemaPath(ValueProvider<String> enrichSchemaPath);
 
 }

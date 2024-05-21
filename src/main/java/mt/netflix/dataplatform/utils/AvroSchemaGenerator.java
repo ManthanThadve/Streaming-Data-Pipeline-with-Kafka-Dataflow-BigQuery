@@ -9,9 +9,9 @@ public class AvroSchemaGenerator {
 
     private AvroSchemaGenerator(){}
 
-    public static Schema generateAvroSchema() throws IOException {
+    public static Schema generateAvroSchema(String filePath) throws IOException {
         Schema avroSchema;
-        File schemaFile = new File("M:\\Training\\Beam\\netflix-etl-formatter\\configurations\\schema\\enriched_netflix.avsc");
+        File schemaFile = new File(filePath);
         Schema.Parser parser = new Schema.Parser();
         avroSchema = parser.parse(schemaFile);
         return avroSchema;
