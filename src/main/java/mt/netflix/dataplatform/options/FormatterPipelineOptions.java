@@ -1,11 +1,20 @@
 package mt.netflix.dataplatform.options;
 
 import org.apache.beam.sdk.options.PipelineOptions;
-import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.options.Validation;
+import org.apache.beam.sdk.options.ValueProvider;
 
+public interface FormatterPipelineOptions extends PipelineOptions {
 
-public interface FormatterPipelineOptions extends PipelineOptions{
+    @Validation.Required
+    ValueProvider<String> getSchemaRegistry();
+
+    void setSchemaRegistry(ValueProvider<String> schemaRegistry);
+
+    @Validation.Required
+    ValueProvider<String> getBootstrapServer();
+
+    void setBootstrapServer(ValueProvider<String> bootstrapServer);
 
     @Validation.Required
     ValueProvider<String> getInputTopic();
@@ -28,3 +37,4 @@ public interface FormatterPipelineOptions extends PipelineOptions{
     void setEnrichSchemaPath(ValueProvider<String> enrichSchemaPath);
 
 }
+

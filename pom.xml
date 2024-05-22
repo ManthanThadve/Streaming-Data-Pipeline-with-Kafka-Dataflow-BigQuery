@@ -30,8 +30,14 @@
             <id>maven_central</id>
             <name>Maven Central</name>
             <!--      <url>https://repo.maven.apache.org/maven2/</url>-->
-            <url>http://maven.apache.org</url>
+            <url>https://maven.apache.org</url>
         </repository>
+
+        <repository>
+            <id>confluent</id>
+            <url>https://packages.confluent.io/maven/</url>
+        </repository>
+
     </repositories>
 
     <dependencies>
@@ -52,6 +58,17 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
             <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-avro-serializer</artifactId>
+            <version>6.2.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-schema-registry</artifactId>
+            <version>7.6.0</version>
         </dependency>
 
         <dependency>
