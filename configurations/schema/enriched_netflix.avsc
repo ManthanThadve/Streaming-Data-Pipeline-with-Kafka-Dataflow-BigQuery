@@ -35,7 +35,7 @@
       "type": [
         "null",
         "int"
-      ],
+      ]
     },
     {
       "name": "rating",
@@ -66,18 +66,12 @@
       ]
     },
     {
-      "name": "number_of_cast",
+      "name": "source_timestamp",
       "type": [
         "null",
-        "int"
-      ]
-    },
-    {
-      "name": "timestamp",
-      "type": [
-        "null",
-        "int"
-      ]
+        { "type": "long", ",logicalType": "date" }
+      ],
+      "default": null
     },
     {
       "name": "source_topic",
@@ -87,14 +81,14 @@
       ]
     },
     {
-      "name": "partition",
+      "name": "source_partition",
       "type": [
         "null",
         "int"
       ]
     },
     {
-      "name": "offset",
+      "name": "source_offset",
       "type": [
         "null",
         "int"
