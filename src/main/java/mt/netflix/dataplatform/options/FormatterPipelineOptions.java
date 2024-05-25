@@ -1,30 +1,40 @@
 package mt.netflix.dataplatform.options;
 
 import org.apache.beam.sdk.options.PipelineOptions;
-import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.options.Validation;
+import org.apache.beam.sdk.options.ValueProvider;
 
-
-public interface FormatterPipelineOptions extends PipelineOptions{
-
-    @Validation.Required
-    ValueProvider<String> getInputFolderPath();
-
-    void setInputFolderPath(ValueProvider<String> inputFolderPath);
+public interface FormatterPipelineOptions extends PipelineOptions {
 
     @Validation.Required
-    ValueProvider<String> getInputFileName();
+    ValueProvider<String> getSchemaRegistry();
 
-    void setInputFileName(ValueProvider<String> inputFileName);
-
-    @Validation.Required
-    ValueProvider<String> getOutputFolderPath();
-
-    void setOutputFolderPath(ValueProvider<String> outputFolderPath);
+    void setSchemaRegistry(ValueProvider<String> schemaRegistry);
 
     @Validation.Required
-    ValueProvider<String> getOutputFileName();
+    ValueProvider<String> getBootstrapServer();
 
-    void setOutputFileName(ValueProvider<String> outputFileName);
+    void setBootstrapServer(ValueProvider<String> bootstrapServer);
+
+    @Validation.Required
+    ValueProvider<String> getInputTopic();
+
+    void setInputTopic(ValueProvider<String> inputTopic);
+
+    @Validation.Required
+    ValueProvider<String> getRawSchemaPath();
+
+    void setRawSchemaPath(ValueProvider<String> rawSchemaPath);
+
+    @Validation.Required
+    ValueProvider<String> getOutputTopic();
+
+    void setOutputTopic(ValueProvider<String> outputTopic);
+
+    @Validation.Required
+    ValueProvider<String> getEnrichSchemaPath();
+
+    void setEnrichSchemaPath(ValueProvider<String> enrichSchemaPath);
 
 }
+
