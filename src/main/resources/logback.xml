@@ -10,4 +10,4 @@
         </encoder>
     </appender>
 
-    <logger name="org.apache.beam" level="INFO" />  <logger name="mt.netflix.dataplatform" level="DEBUG" />  </configuration>
+    <logger name="org.apache.kafka" level="WARN"/><logger name="org.apache.beam" level="INFO" />  <logger name="mt.netflix.dataplatform" level="DEBUG" />  </configuration>
