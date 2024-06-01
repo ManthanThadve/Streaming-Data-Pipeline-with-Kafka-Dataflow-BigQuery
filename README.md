@@ -27,3 +27,24 @@ mvn compile exec:java -Dexec.mainClass=mt.netflix.dataplatform.KafkaFormatterPip
 
 
 ```
+
+## Running with DirectRunner to write into snowflake
+```shell
+mvn compile exec:java -Dexec.mainClass=mt.netflix.dataplatform.KafkaFormatterPipeline \
+-Dexec.args=" \
+--runner=DirectRunner \
+--bootstrapServer=localhost:9092 \
+--schemaRegistry=http://localhost:8081 \
+--enrichSchemaPath=M:\\Training\\Beam\\Streaming-Data-Pipeline-with-Kafka-Dataflow-BigQuery\\configurations\\schema\\enriched_netflix.avsc \
+--inputTopic=raw_event_store \
+--username=ManthanThadve \
+--password=Manthan@123 \
+--serverName=xp60388.central-india.azure.snowflakecomputing.com \
+--database=DATA_PLATFORM \
+--schema=NETFLIX \
+--warehouse=COMPUTE_WH \
+--role=ACCOUNTADMIN \
+
+
+
+```
