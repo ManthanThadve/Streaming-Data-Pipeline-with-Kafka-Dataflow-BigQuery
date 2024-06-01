@@ -3,8 +3,9 @@ package mt.netflix.dataplatform.options;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.Validation;
 import org.apache.beam.sdk.options.ValueProvider;
+import org.apache.beam.sdk.io.snowflake.SnowflakePipelineOptions;
 
-public interface FormatterPipelineOptions extends PipelineOptions {
+public interface FormatterPipelineOptions extends PipelineOptions, SnowflakePipelineOptions {
 
     @Validation.Required
     ValueProvider<String> getSchemaRegistry();
