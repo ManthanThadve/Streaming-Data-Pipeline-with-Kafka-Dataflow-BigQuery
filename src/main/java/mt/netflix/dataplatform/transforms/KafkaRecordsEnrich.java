@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-public class KafkaRecordsEnrich extends PTransform<PCollection<KafkaRecord<String, GenericRecord>>, PCollection<KV<String, GenericRecord>>> {
+public class KafkaRecordsEnrich extends PTransform<PCollection<KafkaRecord<String, GenericRecord>>, PCollection<GenericRecord>> {
 
     public static final Logger LOG = LoggerFactory.getLogger(KafkaRecordsEnrich.class);
     String enrichSchemaPath;
@@ -29,11 +29,14 @@ public class KafkaRecordsEnrich extends PTransform<PCollection<KafkaRecord<Strin
 
 
     @Override
-    public PCollection<KV<String, GenericRecord>> expand(PCollection<KafkaRecord<String, GenericRecord>> input) {
-        return input.apply("Print Kafka Record", ParDo.of(new DoFn<KafkaRecord<String, GenericRecord>, KV<String, GenericRecord>>() {
+    public PCollection<GenericRecord> expand(PCollection<KafkaRecord<String, GenericRecord>> input) {
+
+
+        return input.apply("Enrich Kafka Record", ParDo.of(new DoFn<KafkaRecord<String, GenericRecord>, GenericRecord>() {
 
             @ProcessElement
             public void processElement(ProcessContext c) throws IOException {
+                GenericRecord existingRecord = null;
                 try {
                     KafkaRecord<String, GenericRecord> kafkaRecord = c.element();
                     if (kafkaRecord == null) {
@@ -42,13 +45,10 @@ public class KafkaRecordsEnrich extends PTransform<PCollection<KafkaRecord<Strin
                     }
 
                     long timestamp = kafkaRecord.getTimestamp();
-                    int partition = kafkaRecord.getPartition();
-                    long offset = kafkaRecord.getOffset();
-                    String topic = kafkaRecord.getTopic();
 
                     KV<String, GenericRecord> kv = kafkaRecord.getKV();
                     String key = kv.getKey();
-                    GenericRecord existingRecord = kv.getValue();
+                    existingRecord = kv.getValue();
                     if (existingRecord == null) {
                         LOG.error("Existing record is null for key: " + key);
                         return;
@@ -58,7 +58,7 @@ public class KafkaRecordsEnrich extends PTransform<PCollection<KafkaRecord<Strin
 
                     GenericRecordBuilder recordBuilder = new GenericRecordBuilder(modifiedSchema);
                     recordBuilder.set("title", getSafeString(existingRecord, "title"));
-                    recordBuilder.set("cast", getMainCast(getSafeString(existingRecord, "cast")));
+                    recordBuilder.set("main_cast", getMainCast(getSafeString(existingRecord, "cast")));
                     recordBuilder.set("country", getSafeString(existingRecord, "country"));
                     recordBuilder.set("date_added", getSafeString(existingRecord, "date_added"));
                     recordBuilder.set("release_year", getSafeInt(existingRecord, "release_year"));
@@ -66,20 +66,24 @@ public class KafkaRecordsEnrich extends PTransform<PCollection<KafkaRecord<Strin
                     recordBuilder.set("duration", getSafeString(existingRecord, "duration"));
                     recordBuilder.set("listed_in", getSafeString(existingRecord, "listed_in"));
                     recordBuilder.set("description", getSafeString(existingRecord, "description"));
-                    recordBuilder.set("source_timestamp", convertTimestamp(timestamp));
-                    recordBuilder.set("source_topic", topic);
-                    recordBuilder.set("source_partition", partition);
-                    recordBuilder.set("source_offset", offset);
+                    recordBuilder.set("number_of_cast", getCastNumber(getSafeString(existingRecord, "cast")));
+                    recordBuilder.set("systemModStamp", convertTimestamp(timestamp));
 
                     GenericRecord enrichedRecord = recordBuilder.build();
-                    LOG.info("Processed record with offset [{}], partition [{}], enrichedRecord: {}", offset, partition, enrichedRecord);
 
-                    c.output(KV.of(key, enrichedRecord));
+                    c.output(enrichedRecord);
 
                 } catch (Exception e) {
-                    LOG.error("Error Processing element", e);
+                    LOG.error("Error Processing element {}", existingRecord, e);
                 }
 
+            }
+
+            private int getCastNumber(String cast) {
+                if (cast == null || cast.isEmpty()) {
+                    return 0;
+                }
+                return cast.split(",").length;
             }
 
             private String getSafeString(GenericRecord record, String fieldName) {
